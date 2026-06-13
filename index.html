@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#06090f">
 <title>RISE OF THE POLAR BEAR</title>
+<!-- PWA: installable as a standalone app on desktop & in Edge -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="application-name" content="Rise of the Polar Bear">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Polar Bear">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -2787,8 +2797,20 @@ async function confirmReset(){
 // ══════════════════════════════════════════════
 function $(id){ return document.getElementById(id); }
 
+function registerServiceWorker(){
+  // Registers the PWA service worker so the app is installable on desktop & Edge.
+  // Requires a secure context (https or localhost); silently skipped otherwise
+  // (e.g. opened directly via file:// or inside a sandboxed preview).
+  if(!('serviceWorker' in navigator) || !window.isSecureContext) return;
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => {
+      console.warn('Service worker registration skipped:', err && err.message);
+    });
+  });
+}
+
 function setupOnlineDetection(){
-  // Online/offline detection only — no service worker (sandboxed env)
+  // Online/offline detection.
   const updateStatus = () => {
     const dot = $('sync-dot');
     const txt = $('sync-text');
@@ -2814,8 +2836,9 @@ function setupOnlineDetection(){
 }
 
 function initApp(){
-  // Online/offline detection (no service worker — claude.ai is sandboxed)
+  // Online/offline detection + PWA service worker (installable app).
   setupOnlineDetection();
+  registerServiceWorker();
   
   // Scroll to top button
   window.addEventListener('scroll', () => {
